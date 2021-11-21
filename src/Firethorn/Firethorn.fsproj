@@ -6,5 +6,6 @@
   <ItemGroup>
     <Compile Include="NodeOrToken.fs" />
     <Compile Include="GreenTree.fs" />
+    <Compile Include="RedTree.fs" />
   </ItemGroup>
 </Project>

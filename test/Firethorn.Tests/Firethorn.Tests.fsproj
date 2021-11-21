@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="GreenTreeTests.fs" />
+    <Compile Include="RedTreeTests.fs" />
     <Compile Include="NodeOrTokenTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
