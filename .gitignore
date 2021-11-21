@@ -1,0 +1,23 @@
+# artifacts from the big boy compiler
+obj/
+bin/
+
+# Unit test results
+**/TestResults/*.trx
+
+# artifacts from our compilations
+*.runtimeconfig.json
+*.runtimeconfig.dev.json
+*.dll
+*.exe
+/docs/build/
+
+# Ionide stuff for VS Code
+.fake
+.ionide
+
+# Build and package artifacts
+[aA]rtifacts/
+
+# Any CIL files
+*.il
