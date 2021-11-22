@@ -22,6 +22,23 @@ type SyntaxNode =
           Offset = 0
           Green = node }
 
+    /// Enumerate the children of the current node.
+    member self.Children() =
+        let (children, _ ) =
+          self.Green.Children 
+          |> Seq.mapFold (fun idx green ->
+            match green with
+            | Node greenNode -> 
+              ({ SyntaxNode.Parent = Some(self)
+                 Offset = idx
+                 Green = greenNode
+              } |> Node, idx + greenNode.TextLength)
+            | Token greenToken ->
+              ({ SyntaxToken.Parent = Some(self)
+                 Offset = idx
+                 Green = greenToken } |> Token, idx + greenToken.TextLength)) self.Offset
+        children
+
 /// A token within the syntax tree. This is a wrapper around an
 /// underlying `GreenToken` in the same way that `SyntaxNode` wraps
 /// `GreenNode`.

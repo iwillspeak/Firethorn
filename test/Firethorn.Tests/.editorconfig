@@ -1,0 +1,25 @@
+root = true
+
+[*]
+insert_final_newline = true
+
+[*.{scm,sld}]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+
+[*.{fs,fsi}]
+indent_size = 4
+indent_style = space
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.{targets,props}]
+indent_style = space
+indent_size = 2
