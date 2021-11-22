@@ -5,9 +5,10 @@ namespace Firethorn
 /// Both the green and red tees depend on storing references to either a node
 /// or a token. This type is used as a generic wrapper around a node type
 /// and token type.
+[<Struct>]
 type NodeOrToken<'N, 'T> =
-    | Node of 'N
-    | Token of 'T
+    | Node of node: 'N
+    | Token of token: 'T
 
 module NodeOrToken =
 
