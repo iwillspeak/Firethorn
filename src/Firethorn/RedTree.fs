@@ -22,22 +22,36 @@ type SyntaxNode =
           Offset = 0
           Green = node }
 
+    /// Get the kind of the underlying green node.
+    member self.Kind = self.Green.Kind
+
     /// Enumerate the children of the current node.
-    member self.Children() =
-        let (children, _ ) =
-          self.Green.Children 
-          |> Seq.mapFold (fun idx green ->
-            match green with
-            | Node greenNode -> 
-              ({ SyntaxNode.Parent = Some(self)
-                 Offset = idx
-                 Green = greenNode
-              } |> Node, idx + greenNode.TextLength)
-            | Token greenToken ->
-              ({ SyntaxToken.Parent = Some(self)
-                 Offset = idx
-                 Green = greenToken } |> Token, idx + greenToken.TextLength)) self.Offset
+    member self.ChildrenWithTokens() =
+        let (children, _) =
+            self.Green.Children
+            |> Seq.mapFold
+                (fun idx green ->
+                    match green with
+                    | Node greenNode ->
+                        ({ SyntaxNode.Parent = Some(self)
+                           Offset = idx
+                           Green = greenNode }
+                         |> Node,
+                         idx + greenNode.TextLength)
+                    | Token greenToken ->
+                        ({ SyntaxToken.Parent = Some(self)
+                           Offset = idx
+                           Green = greenToken }
+                         |> Token,
+                         idx + greenToken.TextLength))
+                self.Offset
+
         children
+
+    /// Enumerate the child nodes only of the current node, skipping tokens.
+    member self.Children() =
+        self.ChildrenWithTokens()
+        |> Seq.choose (NodeOrToken.asNode)
 
 /// A token within the syntax tree. This is a wrapper around an
 /// underlying `GreenToken` in the same way that `SyntaxNode` wraps
@@ -46,6 +60,9 @@ and SyntaxToken =
     { Parent: SyntaxNode option
       Offset: int
       Green: GreenToken }
+
+    /// Get the kind of the underlying green node.
+    member self.Kind = self.Green.Kind
 
 /// An element in the 'red' or syntax tree.
 and SyntaxElement = NodeOrToken<SyntaxNode, SyntaxToken>

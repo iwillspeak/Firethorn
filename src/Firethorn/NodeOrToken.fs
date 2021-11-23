@@ -17,7 +17,7 @@ module NodeOrToken =
         function
         | Node _ -> true
         | Token _ -> false
-    
+
     /// Check if the given `NodeOrToken` is a `Token`.
     let isToken =
         function
@@ -35,3 +35,15 @@ module NodeOrToken =
         function
         | Node n -> n |> onNode
         | Token t -> t |> onToken
+
+    /// Convert a node or token into an optional node.
+    let asNode =
+        function
+        | Node n -> Some n
+        | Token _ -> None
+
+    /// Convert a node or token into an optional token.
+    let asToken =
+        function
+        | Node _ -> None
+        | Token t -> Some t
