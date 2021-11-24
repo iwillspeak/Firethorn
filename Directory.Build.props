@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <UpdateVersionProperties>true</UpdateVersionProperties>
+    <UpdateAssemblyInfo>false</UpdateAssemblyInfo>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="GitVersion.MsBuild" Version="5.7.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>build</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+</Project>

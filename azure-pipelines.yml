@@ -1,0 +1,47 @@
+variables:
+- group: ApiKeys
+- name: configuration
+  value: Release
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+    exclude:
+    - 'noci[/-]*'
+  tags:
+    include:
+    - 'v*'
+
+jobs:
+
+- job: Linux
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET 5.0 sdk'
+    inputs:
+      packageType: sdk
+      version: 5.0.x
+  - bash: |
+      set -euxo pipefail
+      dotnet tool restore
+      dotnet build --configuration $(configuration)
+      dotnet test --no-build --configuration $(configuration) --logger 'trx' --logger 'console;verbosity=normal'
+      dotnet pack --no-build --configuration $(configuration) --output=$(Build.ArtifactStagingDirectory)
+      # Check code format. Fantomas for F#
+      dotnet tool run fantomas --check --recurse .
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '**/TestResults/*.trx'
+  - publish: $(Build.ArtifactStagingDirectory)
+    artifact: NuGet
+  - script: |
+      dotnet nuget push --api-key $API_KEY --source "NuGetOrg" $(Build.ArtifactStagingDirectory)/*.nupkg
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags'))
+    env:
+      API_KEY: $(NuGetOrgApiKey)

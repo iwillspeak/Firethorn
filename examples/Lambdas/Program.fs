@@ -210,9 +210,11 @@ let prettyPrint tree =
 
     let mutable indent = 0
 
-    let printIndent () = String.init indent (fun _ -> "  ") |> printf "%s"
+    let printIndent () =
+        String.init indent (fun _ -> "  ") |> printf "%s"
 
     printfn "Red tree structure:"
+
     tree
     |> Walk.walk
     |> Seq.iter
@@ -229,6 +231,7 @@ let prettyPrint tree =
     /// Re-construct the origional text by walking the tree and concatenating
     /// the tokens' text.
     let builder = StringBuilder()
+
     tree
     |> Walk.walk
     |> Seq.iter
@@ -236,10 +239,11 @@ let prettyPrint tree =
         | EnterNode _ -> ()
         | LeaveNode _ -> ()
         | OnToken t -> bprintf builder "%s" t.Green.Text)
+
     printfn "Origional text: %s" (string builder)
 
 
-    let typedTree =  (Ast.ProgramSyntax.Cast(tree).Value)
+    let typedTree = (Ast.ProgramSyntax.Cast(tree).Value)
     printfn "%A - %d expressions" typedTree (typedTree.Expressions |> Seq.length)
 
 [<EntryPoint>]

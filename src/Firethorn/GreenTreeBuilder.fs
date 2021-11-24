@@ -25,14 +25,18 @@ type GreenNodeBuilder() =
     member _.FinishNode() =
         let (kind, oldChildren) = nodes |> List.head
         nodes <- nodes |> List.tail
+
         let node =
             GreenNode.Create(kind, children |> List.rev)
             |> Node
+
         children <- node :: oldChildren
 
     /// Buffer a token into the current node.
     member _.Token(kind: SyntaxKind, text: string) =
-        children <- (GreenToken.Create(kind, text) |> Token) :: children
+        children <-
+            (GreenToken.Create(kind, text) |> Token)
+            :: children
 
     /// Build a root node of the given `kind` with the current child
     /// state. When this is called the tree must be 'balanced'. That
@@ -43,6 +47,6 @@ type GreenNodeBuilder() =
     /// converted into a red tree by calling `SyntaxNode.CreateRoot`.
     member _.BuildRoot(kind: SyntaxKind) =
         if not (List.isEmpty nodes) then
-            failwithf "Expected empty stack. Found %A" nodes 
-        
+            failwithf "Expected empty stack. Found %A" nodes
+
         GreenNode.Create(kind, children |> List.rev)
