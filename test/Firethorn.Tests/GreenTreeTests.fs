@@ -43,3 +43,46 @@ let ``Green node has correct length`` () =
         )
 
     Assert.Equal(7, mulForm.TextLength)
+
+[<Fact>]
+let ``Green trees can share nodes`` () =
+    let openBrace = GreenToken.Create(SyntaxKind 2, "(") |> Token
+    let closeBrace = GreenToken.Create(SyntaxKind 5, ")") |> Token
+    let two = GreenToken.Create(SyntaxKind 4, "2") |> Token
+    let mulForm =
+        GreenNode.Create(
+            SyntaxKind 1,
+            [ openBrace
+              GreenToken.Create(SyntaxKind 3, "*") |> Token
+              two
+              two
+              closeBrace ]
+        )
+
+    //               Expression
+    //                   |
+    //      +---+-----+--+--+----+
+    //      |   |      \   /     |
+    //   Open  Mul      Two    Close
+    Assert.Equal(5, mulForm.TextLength)
+
+    let additionForm =
+        GreenNode.Create(
+            SyntaxKind 1,
+            [ openBrace
+              GreenToken.Create(SyntaxKind 6, "+") |> Token
+              mulForm |> Node
+              mulForm |> Node
+              closeBrace ]
+        )
+    
+    //               Expression
+    //                   |
+    //      +---+-----+--+--+----+
+    //      |   |      \   /     |
+    //   Open  Add   Expression  Close
+    //      |            |       |
+    //      +---+-----+--+--+----+
+    //          |      \   / 
+    //         Mul      Two
+    Assert.Equal(13, additionForm.TextLength)
