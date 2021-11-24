@@ -4,6 +4,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Text.fs" />
     <Compile Include="NodeOrToken.fs" />
     <Compile Include="GreenTree.fs" />
     <Compile Include="RedTree.fs" />

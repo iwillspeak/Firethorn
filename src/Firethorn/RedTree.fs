@@ -13,7 +13,7 @@ open Firethorn.Green
 /// element in the source text.
 type SyntaxNode =
     { Parent: SyntaxNode option
-      Offset: int
+      Offset: TextLength
       Green: GreenNode }
 
     /// Create a new root syntax node from an underlying green node.
@@ -24,6 +24,11 @@ type SyntaxNode =
 
     /// Get the kind of the underlying green node.
     member self.Kind = self.Green.Kind
+
+    /// The text range covered by this element.
+    member self.Range =
+        { Start = self.Offset
+          End = self.Offset + self.Green.TextLength }
 
     /// Enumerate the children of the current node.
     member self.ChildrenWithTokens() =
@@ -58,11 +63,16 @@ type SyntaxNode =
 /// `GreenNode`.
 and SyntaxToken =
     { Parent: SyntaxNode option
-      Offset: int
+      Offset: TextLength
       Green: GreenToken }
 
     /// Get the kind of the underlying green node.
     member self.Kind = self.Green.Kind
+
+    /// The text range covered by this element.
+    member self.Range =
+        { Start = self.Offset
+          End = self.Offset + self.Green.TextLength }
 
 /// An element in the 'red' or syntax tree.
 and SyntaxElement = NodeOrToken<SyntaxNode, SyntaxToken>

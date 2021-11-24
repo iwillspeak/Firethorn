@@ -15,7 +15,7 @@ type SyntaxKind = SyntaxKind of int
 /// witih a tree.
 type GreenNode =
     { Kind: SyntaxKind
-      Width: int
+      Width: TextLength
       Children: GreenElement list }
 
     /// Create a new green node from raw parts. The width of the node is
