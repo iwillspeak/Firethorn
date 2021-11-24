@@ -23,6 +23,7 @@ module Parse =
         | LAMBDA = 2
         | DOT = 3
         | END = 4
+        | WHITESPACE = 5
 
         /// Node kinds
         | USE = 100
@@ -86,25 +87,30 @@ module Parse =
             |> Token
 
         let rec parseUse () =
-            match current () |> getKind with
-            | Ident ->
-                let id = bump ()
-
-                GreenNode.Create(
-                    AstKind.USE |> astToGreen,
-                    [ GreenToken.Create(AstKind.IDENT |> astToGreen, id |> getText)
-                      |> Token ]
-                )
-                |> Node
-            | _ -> parseError ()
+            GreenNode.Create(AstKind.USE |> astToGreen, [ expect TokenKind.Ident AstKind.IDENT |> Token ])
+            |> Node
 
         and parseAbstraction () =
+            let mutable children = [ expect TokenKind.Lambda AstKind.LAMBDA |> Token ]
+
+            let maybeWs () =
+                if current () |> getKind = TokenKind.Whitespace then
+                    children <- 
+                    (expect TokenKind.Whitespace AstKind.WHITESPACE |> Token)
+                    :: children
+            maybeWs ()
+            children <- 
+                  (expect TokenKind.Ident AstKind.IDENT |> Token) :: children
+            maybeWs ()
+            children <- 
+                  (expect TokenKind.Dot AstKind.DOT |> Token) :: children
+            maybeWs ()
+            children <-
+                parseExpression () :: children
+
             GreenNode.Create(
                 AstKind.ABSTRACTION |> astToGreen,
-                [ expect TokenKind.Lambda AstKind.LAMBDA |> Token
-                  expect TokenKind.Ident AstKind.IDENT |> Token
-                  expect TokenKind.Dot AstKind.DOT |> Token
-                  parseExpression () ]
+                List.rev children
             )
             |> Node
 
@@ -146,7 +152,16 @@ let prettyPrint tree =
         | LeaveNode n -> indent <- indent - 1
         | OnToken t ->
             printIndent ()
-            printfn "%s@%O" (t.Kind |> kindToName) t.Range)
+            printfn "%s@%O '%s'" (t.Kind |> kindToName) t.Range t.Green.Text)
+
+    tree
+    |> Walk.walk
+    |> Seq.iter 
+        (function
+        | EnterNode _ -> ()
+        | LeaveNode _ -> ()
+        | OnToken t ->
+            printf "%s" t.Green.Text)
 
 [<EntryPoint>]
 let main argv =

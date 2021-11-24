@@ -7,6 +7,6 @@ type TextLength = int
 type TextRange =
     { Start: TextLength
       End: TextLength }
-      
+
     // Custom string representation for text ranges.
     override self.ToString() = sprintf "%d..%d" self.Start self.End
