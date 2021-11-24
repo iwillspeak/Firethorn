@@ -1,5 +1,11 @@
 namespace Firethorn
 
+/// Syntax Kind
+///
+/// A generic representation of the kind fo a node in the syntax tree.
+[<Struct>]
+type SyntaxKind = SyntaxKind of int
+
 /// Node or Token Type
 ///
 /// Both the green and red tees depend on storing references to either a node

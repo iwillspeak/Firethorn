@@ -1,4 +1,6 @@
 open Firethorn.Red
+open Microsoft.FSharp.Core.Printf
+open System.Text
 
 module Parse =
 
@@ -76,71 +78,141 @@ module Parse =
 
             tok
 
-        let expect token syntax =
+        let skipWs (builder: GreenNodeBuilder) =
+            while current () |> getKind = TokenKind.Whitespace do
+                builder.Token(AstKind.WHITESPACE |> astToGreen, bump () |> getText)
+
+        let expect (builder: GreenNodeBuilder) token syntax =
+            skipWs builder
+
             if current () |> getKind = token then
-                GreenToken.Create(syntax |> astToGreen, bump () |> getText)
+                builder.Token(syntax |> astToGreen, bump () |> getText)
             else
-                GreenToken.Create(AstKind.ERROR |> astToGreen, "")
+                builder.Token(AstKind.ERROR |> astToGreen, "")
 
-        let parseError () =
-            GreenToken.Create(AstKind.ERROR |> astToGreen, bump () |> getText)
-            |> Token
+            skipWs builder
 
-        let rec parseUse () =
-            GreenNode.Create(AstKind.USE |> astToGreen, [ expect TokenKind.Ident AstKind.IDENT |> Token ])
-            |> Node
+        let parseError (builder: GreenNodeBuilder) =
+            builder.Token(AstKind.ERROR |> astToGreen, bump () |> getText)
 
-        and parseAbstraction () =
-            let mutable children = [ expect TokenKind.Lambda AstKind.LAMBDA |> Token ]
+        let rec parseUse (builder: GreenNodeBuilder) =
+            builder.StartNode(AstKind.USE |> astToGreen)
+            expect builder TokenKind.Ident AstKind.IDENT
+            builder.FinishNode()
 
-            let maybeWs () =
-                if current () |> getKind = TokenKind.Whitespace then
-                    children <- 
-                    (expect TokenKind.Whitespace AstKind.WHITESPACE |> Token)
-                    :: children
-            maybeWs ()
-            children <- 
-                  (expect TokenKind.Ident AstKind.IDENT |> Token) :: children
-            maybeWs ()
-            children <- 
-                  (expect TokenKind.Dot AstKind.DOT |> Token) :: children
-            maybeWs ()
-            children <-
-                parseExpression () :: children
+        and parseAbstraction (builder: GreenNodeBuilder) =
+            builder.StartNode(AstKind.ABSTRACTION |> astToGreen)
+            expect builder TokenKind.Lambda AstKind.LAMBDA
+            expect builder TokenKind.Ident AstKind.IDENT
+            expect builder TokenKind.Dot AstKind.DOT
+            parseExpression builder
+            builder.FinishNode()
 
-            GreenNode.Create(
-                AstKind.ABSTRACTION |> astToGreen,
-                List.rev children
-            )
-            |> Node
+        and parseExpression (builder: GreenNodeBuilder) =
+            skipWs builder
 
-        and parseExpression () =
             match current () |> getKind with
-            | Ident -> parseUse ()
-            | Lambda -> parseAbstraction ()
-            | _ -> parseError ()
+            | Ident -> parseUse builder
+            | Lambda -> parseAbstraction builder
+            | _ -> parseError builder
+
+            skipWs builder
 
         let parseProgram () =
-            let mutable elements = []
+
+            let builder = GreenNodeBuilder()
 
             while current () |> getKind <> TokenKind.EndOfFile do
-                elements <- List.append elements [ parseExpression () ]
+                parseExpression builder
 
-            GreenNode.Create(
-                AstKind.PROGRAM |> astToGreen,
-                List.append elements [ expect TokenKind.EndOfFile AstKind.END |> Token ]
-            )
+            expect builder TokenKind.EndOfFile AstKind.END
+
+            builder.BuildRoot(AstKind.PROGRAM |> astToGreen)
 
         parseProgram () |> SyntaxNode.CreateRoot
+
+module Ast =
+
+    open Parse
+    open Firethorn
+
+    type IdentifierSyntax(token: SyntaxToken) =
+
+        static member Cast(token: SyntaxToken) =
+            if token.Kind |> astFromGreen = AstKind.IDENT then
+                Some(IdentifierSyntax(token))
+            else
+                None
+
+        member _.Name = token.Green.Text
+
+    type UseSyntax(syntax: SyntaxNode) =
+
+        static member Cast(node: SyntaxNode) =
+            if node.Kind |> astFromGreen = AstKind.USE then
+                Some(UseSyntax(node))
+            else
+                None
+
+        member _.Ident =
+            syntax.ChildrenWithTokens()
+            |> Seq.tryPick (
+                NodeOrToken.asToken
+                >> (Option.bind IdentifierSyntax.Cast)
+            )
+
+    and AbstractionSyntax(syntax: SyntaxNode) =
+
+        static member Cast(node: SyntaxNode) =
+            if node.Kind |> astFromGreen = AstKind.ABSTRACTION then
+                Some(AbstractionSyntax(node))
+            else
+                None
+
+        member _.Binding =
+            syntax.ChildrenWithTokens()
+            |> Seq.tryPick (
+                NodeOrToken.asToken
+                >> (Option.bind IdentifierSyntax.Cast)
+            )
+
+        member _.Body =
+            syntax.Children()
+            |> Seq.choose ExpressionSyntax.Cast
+            |> Seq.tryHead
+
+    and ExpressionSyntax =
+        | Abstraction of AbstractionSyntax
+        | Use of UseSyntax
+
+        static member Cast(node: SyntaxNode) =
+            (UseSyntax.Cast node |> Option.map (Use))
+            |> Option.orElseWith
+                (fun () ->
+                    AbstractionSyntax.Cast node
+                    |> Option.map Abstraction)
+
+    type ProgramSyntax(syntax: SyntaxNode) =
+
+        static member Cast(syntax: SyntaxNode) =
+            if syntax.Kind |> astFromGreen = AstKind.PROGRAM then
+                Some(ProgramSyntax(syntax))
+            else
+                None
+
+        member _.Expressions =
+            syntax.Children()
+            |> Seq.choose (ExpressionSyntax.Cast)
 
 let kindToName = Parse.astFromGreen >> sprintf "%A"
 
 let prettyPrint tree =
+
     let mutable indent = 0
 
-    let printIndent () =
-        String.init indent (fun _ -> "  ") |> printf "%s"
+    let printIndent () = String.init indent (fun _ -> "  ") |> printf "%s"
 
+    printfn "Red tree structure:"
     tree
     |> Walk.walk
     |> Seq.iter
@@ -154,14 +226,21 @@ let prettyPrint tree =
             printIndent ()
             printfn "%s@%O '%s'" (t.Kind |> kindToName) t.Range t.Green.Text)
 
+    /// Re-construct the origional text by walking the tree and concatenating
+    /// the tokens' text.
+    let builder = StringBuilder()
     tree
     |> Walk.walk
-    |> Seq.iter 
+    |> Seq.iter
         (function
         | EnterNode _ -> ()
         | LeaveNode _ -> ()
-        | OnToken t ->
-            printf "%s" t.Green.Text)
+        | OnToken t -> bprintf builder "%s" t.Green.Text)
+    printfn "Origional text: %s" (string builder)
+
+
+    let typedTree =  (Ast.ProgramSyntax.Cast(tree).Value)
+    printfn "%A - %d expressions" typedTree (typedTree.Expressions |> Seq.length)
 
 [<EntryPoint>]
 let main argv =

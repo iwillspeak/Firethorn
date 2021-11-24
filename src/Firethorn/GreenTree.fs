@@ -2,11 +2,6 @@
 
 open Firethorn
 
-/// Syntax Kind
-///
-/// A generic representation of the kind fo a node in the syntax tree.
-[<Struct>]
-type SyntaxKind = SyntaxKind of int
 
 /// Green Node
 ///
