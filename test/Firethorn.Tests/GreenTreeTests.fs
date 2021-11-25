@@ -92,3 +92,66 @@ let ``Green trees can share nodes`` () =
     //          |      \   /
     //         Mul      Two
     Assert.Equal(13, additionForm.TextLength)
+
+[<Fact>]
+let ``Green tokens are structurally equal`` () =
+    let helloOne = GreenToken.Create(SyntaxKind 0, "hello")
+    let helloTwo = GreenToken.Create(SyntaxKind 0, "hello")
+    let helloThree = GreenToken.Create(SyntaxKind 3, "hello")
+    let world = GreenToken.Create(SyntaxKind 0, "world")
+
+    Assert.Equal(helloOne, helloTwo)
+    Assert.NotEqual(helloOne, world)
+    Assert.NotEqual(helloThree, world)
+    Assert.NotEqual(helloThree, helloTwo)
+
+[<Fact>]
+let ``Green nodes are structurally equal`` () =
+    let emptyNode = GreenNode.Create(SyntaxKind 1, [])
+    let testToken = GreenToken.Create(SyntaxKind 3, "test")
+
+    let identNode =
+        GreenNode.Create(SyntaxKind 2, [ testToken |> Token ])
+
+    Assert.Equal(GreenNode.Create(SyntaxKind 1, []), emptyNode)
+    Assert.NotEqual(identNode, emptyNode)
+    Assert.Equal(GreenNode.Create(SyntaxKind 2, [ testToken |> Token ]), identNode)
+
+[<Fact>]
+let ``Green tree builder`` () =
+
+    let builder = GreenNodeBuilder()
+
+    builder.Token(SyntaxKind 1, "(")
+    builder.StartNode(SyntaxKind 101)
+    builder.Token(SyntaxKind 2, "*")
+    builder.FinishNode()
+    builder.StartNode(SyntaxKind 102)
+    builder.Token(SyntaxKind 3, "10")
+    builder.FinishNode()
+    builder.StartNode(SyntaxKind 102)
+    builder.Token(SyntaxKind 3, "10")
+    builder.FinishNode()
+    builder.Token(SyntaxKind 4, ")")
+
+    let tree = builder.BuildRoot(SyntaxKind 103)
+
+    Assert.Equal((SyntaxKind 103), tree.Kind)
+
+    Assert.Collection(
+        tree.Children,
+        (fun token -> Assert.True(token |> NodeOrToken.isToken)),
+        (fun node ->
+            Assert.True(node |> NodeOrToken.isNode)
+            let node = (node |> NodeOrToken.asNode).Value
+            Assert.Equal(SyntaxKind 101, node.Kind)),
+        (fun node ->
+            Assert.True(node |> NodeOrToken.isNode)
+            let node = (node |> NodeOrToken.asNode).Value
+            Assert.Equal(SyntaxKind 102, node.Kind)),
+        (fun node ->
+            Assert.True(node |> NodeOrToken.isNode)
+            let node = (node |> NodeOrToken.asNode).Value
+            Assert.Equal(SyntaxKind 102, node.Kind)),
+        (fun token -> Assert.True(token |> NodeOrToken.isToken))
+    )
