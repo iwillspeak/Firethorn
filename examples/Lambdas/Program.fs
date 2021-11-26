@@ -266,7 +266,6 @@ let prettyPrint tree =
 
     printfn "Origional text: %s" (string builder)
 
-
     let typedTree = (Ast.ProgramSyntax.Cast(tree).Value)
     printfn "%A - %d expressions" typedTree (typedTree.Expressions |> Seq.length)
 

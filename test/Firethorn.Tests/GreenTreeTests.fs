@@ -4,6 +4,7 @@ open Xunit
 
 open Firethorn
 open Firethorn.Green
+open System
 
 
 [<Fact>]
@@ -155,3 +156,24 @@ let ``Green tree builder`` () =
             Assert.Equal(SyntaxKind 102, node.Kind)),
         (fun token -> Assert.True(token |> NodeOrToken.isToken))
     )
+
+[<Fact>]
+let ``Complete builder with unbalanced node throws exception`` () =
+    let builder = GreenNodeBuilder()
+    builder.StartNode(SyntaxKind 1)
+    Assert.Throws<InvalidOperationException>(fun () -> builder.BuildRoot(SyntaxKind 2) |> ignore)
+
+[<Fact>]
+let ``Finish of unstarted node throws exception`` () =
+    let builder = GreenNodeBuilder()
+
+    let exn =
+        Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
+    Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
+
+    builder.StartNode(SyntaxKind 1)
+    builder.FinishNode()
+    let exn =
+        Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
+    Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
+

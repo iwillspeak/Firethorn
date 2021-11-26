@@ -26,6 +26,9 @@ type GreenNodeBuilder() =
     /// Pop a node from the stack and finish it with the current child
     /// state.
     member _.FinishNode() =
+        if List.isEmpty nodes then
+            invalidOp "Unbalanced call to `FinishNod`."
+
         let (kind, oldChildren) = nodes |> List.head
         nodes <- nodes |> List.tail
 
@@ -38,21 +41,20 @@ type GreenNodeBuilder() =
     /// Store a mark to the current state. This can optionally be used later to
     /// convert the buffered state into a node as if `StartNode` was called
     /// at this point.
-    member _.Mark() =
-        { Children = children}
+    member _.Mark() = { Children = children }
 
     /// Convert a stored mark into a node. This takes all state buffered since
     /// the mark and uses it as the child state of the new node. The final state
     /// of the mbuilder is that at the time the `mark` was taken with a new node
-    /// of `kind` added.   
+    /// of `kind` added.
     member _.ApplyMark(mark: Mark, kind: SyntaxKind) =
         let markLen = List.length mark.Children
         let ourLen = List.length children
+
         if ourLen < markLen then
             invalidOp "Mark has expired. State has unwound past mark."
-        
-        let (ourChildren, bufferedChildren) =
-            List.splitAt (ourLen - markLen) children
+
+        let (ourChildren, bufferedChildren) = List.splitAt (ourLen - markLen) children
 
         if not (bufferedChildren = mark.Children) then
             invalidOp "Mark has expired. Child state does not match."
@@ -78,6 +80,7 @@ type GreenNodeBuilder() =
     /// converted into a red tree by calling `SyntaxNode.CreateRoot`.
     member _.BuildRoot(kind: SyntaxKind) =
         if not (List.isEmpty nodes) then
-            failwithf "Expected empty stack. Found %A" nodes
+            sprintf "Expected empty stack. Found %A" nodes
+            |> invalidOp
 
         GreenNode.Create(kind, children |> List.rev)
