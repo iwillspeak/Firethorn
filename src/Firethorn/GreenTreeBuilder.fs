@@ -2,6 +2,9 @@ namespace Firethorn.Green
 
 open Firethorn
 
+[<Struct>]
+type Mark = private { Children: GreenElement list }
+
 /// Builder type for green nodes. This is intended to be used by a
 /// parser to build up a tree partwise.
 type GreenNodeBuilder() =
@@ -31,6 +34,34 @@ type GreenNodeBuilder() =
             |> Node
 
         children <- node :: oldChildren
+
+    /// Store a mark to the current state. This can optionally be used later to
+    /// convert the buffered state into a node as if `StartNode` was called
+    /// at this point.
+    member _.Mark() =
+        { Children = children}
+
+    /// Convert a stored mark into a node. This takes all state buffered since
+    /// the mark and uses it as the child state of the new node. The final state
+    /// of the mbuilder is that at the time the `mark` was taken with a new node
+    /// of `kind` added.   
+    member _.ApplyMark(mark: Mark, kind: SyntaxKind) =
+        let markLen = List.length mark.Children
+        let ourLen = List.length children
+        if ourLen < markLen then
+            invalidOp "Mark has expired. State has unwound past mark."
+        
+        let (ourChildren, bufferedChildren) =
+            List.splitAt (ourLen - markLen) children
+
+        if not (bufferedChildren = mark.Children) then
+            invalidOp "Mark has expired. Child state does not match."
+
+        let node =
+            GreenNode.Create(kind, ourChildren |> List.rev)
+            |> Node
+
+        children <- node :: bufferedChildren
 
     /// Buffer a token into the current node.
     member _.Token(kind: SyntaxKind, text: string) =

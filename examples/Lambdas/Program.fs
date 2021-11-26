@@ -14,6 +14,7 @@ module Parse =
         | Dot
         | Ident
         | Whitespace
+        | Newline
         | EndOfFile
         | Error
 
@@ -30,7 +31,8 @@ module Parse =
         /// Node kinds
         | USE = 100
         | ABSTRACTION = 101
-        | PROGRAM = 102
+        | APPLICATION = 102
+        | PROGRAM = 103
 
     let astToGreen (kind: AstKind) = SyntaxKind(int kind)
 
@@ -45,6 +47,7 @@ module Parse =
                     match c with
                     | '\\' -> TokenKind.Lambda
                     | '.' -> TokenKind.Dot
+                    | '\n' -> TokenKind.Newline
                     | c when Char.IsLetter(c) -> TokenKind.Ident
                     | c when Char.IsWhiteSpace(c) -> TokenKind.Whitespace
                     | _ -> TokenKind.Error
@@ -68,6 +71,14 @@ module Parse =
             List.tryHead tokens
             |> Option.defaultValue (TokenKind.EndOfFile, "")
 
+        let lookingAtAny kinds =
+            let currentKind = current () |> getKind
+            List.contains currentKind kinds
+
+        let lookingAt kind =
+            let currentKind = current () |> getKind
+            currentKind = kind
+
         let bump () =
             let tok = current ()
 
@@ -79,18 +90,22 @@ module Parse =
             tok
 
         let skipWs (builder: GreenNodeBuilder) =
-            while current () |> getKind = TokenKind.Whitespace do
+            while lookingAtAny [ TokenKind.Newline; TokenKind.Whitespace] do
+                builder.Token(AstKind.WHITESPACE |> astToGreen, bump () |> getText)
+
+        let skipWsNoNl (builder: GreenNodeBuilder) =
+            while lookingAt TokenKind.Whitespace do
                 builder.Token(AstKind.WHITESPACE |> astToGreen, bump () |> getText)
 
         let expect (builder: GreenNodeBuilder) token syntax =
             skipWs builder
 
-            if current () |> getKind = token then
+            if lookingAt token then
                 builder.Token(syntax |> astToGreen, bump () |> getText)
             else
                 builder.Token(AstKind.ERROR |> astToGreen, "")
 
-            skipWs builder
+            skipWsNoNl builder
 
         let parseError (builder: GreenNodeBuilder) =
             builder.Token(AstKind.ERROR |> astToGreen, bump () |> getText)
@@ -111,18 +126,24 @@ module Parse =
         and parseExpression (builder: GreenNodeBuilder) =
             skipWs builder
 
+            let mark = builder.Mark()
+
             match current () |> getKind with
             | Ident -> parseUse builder
             | Lambda -> parseAbstraction builder
             | _ -> parseError builder
 
-            skipWs builder
+            skipWsNoNl builder
+
+            if not <| lookingAtAny [ TokenKind.EndOfFile; TokenKind.Newline ] then
+                parseExpression builder
+                builder.ApplyMark(mark, AstKind.APPLICATION |> astToGreen)
 
         let parseProgram () =
 
             let builder = GreenNodeBuilder()
 
-            while current () |> getKind <> TokenKind.EndOfFile do
+            while not <| lookingAt TokenKind.EndOfFile do
                 parseExpression builder
 
             expect builder TokenKind.EndOfFile AstKind.END
