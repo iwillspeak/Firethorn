@@ -90,7 +90,8 @@ module Parse =
             tok
 
         let skipWs (builder: GreenNodeBuilder) =
-            while lookingAtAny [ TokenKind.Newline; TokenKind.Whitespace] do
+            while lookingAtAny [ TokenKind.Newline
+                                 TokenKind.Whitespace ] do
                 builder.Token(AstKind.WHITESPACE |> astToGreen, bump () |> getText)
 
         let skipWsNoNl (builder: GreenNodeBuilder) =
@@ -135,7 +136,9 @@ module Parse =
 
             skipWsNoNl builder
 
-            if not <| lookingAtAny [ TokenKind.EndOfFile; TokenKind.Newline ] then
+            if not
+               <| lookingAtAny [ TokenKind.EndOfFile
+                                 TokenKind.Newline ] then
                 parseExpression builder
                 builder.ApplyMark(mark, AstKind.APPLICATION |> astToGreen)
 
