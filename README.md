@@ -2,7 +2,7 @@
 
 Red-Green syntax trees for F#. Inspired by Rowan.
 
-## Requirements
+## Design Goals
 
  * Compact representation of trees.
  * Complete representation of the input text.
@@ -111,7 +111,7 @@ and ExpressionSyntax =
 	| Const of ConstantSyntax
 	
 	static member Cast(node: SyntaxNode) =
-		()BinarySyntax.Cast node |> Option.map Bin)n
+		(BinarySyntax.Cast node |> Option.map Bin)
 		|> Option.orElseWith (fun () -> ConstantSyntax.Cast |> Option.map Const)
 		
 ```
@@ -121,3 +121,34 @@ type `ExpressionSyntax`. Each node type in the tree can expose the
 important parts of that node with strongly typed properties. All
 properties return either `Option` or `Seq` values to model the fact
 that any part of the tree could be missing or empty.
+
+## Building Parse Trees
+
+Trees can be built from the bottom up by repeatedly calling `GreenToken.Create` and `GreenNode.Create`. The final node can then be converted into a red tree with the `SyntaxNode.CreateRoot` method. This allows for ergonomic building of syntax during testing, and provides a simple API for programatically generated syntax such as macro expansion. For some simple languages and parsers this may be enough.
+
+A higher level API is also provided to build nodes using `GreenNodeBuilder`. This type allows for incremental building of nodes and is particularly suited to top-down parser construction:
+
+```f#
+let builder = GreenNodeBuilder()
+builder.StartNode(SytaxKind BINOP)
+builder.Token(SyntaxKind OP, "+")
+builder.Token(SyntaxKind NUM, "12")
+builder.Token(SyntaxKind NUM, "45")
+builder.FinishNode()
+```
+
+For cases where it isn't known ahead of time if a node will be needed the `Mark` API allows a point to be 'marked' and applied later to create a node. This would be equivalent to the above:
+
+```f#
+let mark = builder.Mark()
+builder.Token(SyntaxKind OP, "+")
+builder.Token(SyntaxKind NUM, "12")
+builder.Token(SyntaxKind NUM, "45")
+builder.ApplyMark(mark, SytaxKind BINOP)
+```
+
+Once a tee is built it can be converted into a single root node with the `BuildRoot` API:
+
+```f#
+let syntaxRoot = builder.BuildRoot(SyntaxKind PROGRAM)
+```
