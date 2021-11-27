@@ -7,6 +7,7 @@
     <Compile Include="Text.fs" />
     <Compile Include="NodeOrToken.fs" />
     <Compile Include="GreenTree.fs" />
+    <Compile Include="GreenCache.fs" />
     <Compile Include="GreenTreeBuilder.fs" />
     <Compile Include="RedTree.fs" />
     <Compile Include="Walk.fs" />

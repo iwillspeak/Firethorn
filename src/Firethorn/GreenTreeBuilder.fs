@@ -7,7 +7,7 @@ type Mark = private { Children: GreenElement list }
 
 /// Builder type for green nodes. This is intended to be used by a
 /// parser to build up a tree partwise.
-type GreenNodeBuilder() =
+type GreenNodeBuilder(cache: GreenCache) =
 
     /// Node stack. This contains the cached state each time we
     /// started a node.
@@ -16,6 +16,13 @@ type GreenNodeBuilder() =
     /// Current child state. When a node is finished these become the
     /// green child elements for that node.
     let mutable children = []
+
+    /// Cache for nodes and tokens
+    let nodeCache = cache
+
+    /// Create a `GreenNodeBuilder` with a new node cache.
+    new () =
+        GreenNodeBuilder(GreenCache())
 
     /// Start building a new node at the current position of the given
     /// kind.
@@ -33,7 +40,7 @@ type GreenNodeBuilder() =
         nodes <- nodes |> List.tail
 
         let node =
-            GreenNode.Create(kind, children |> List.rev)
+            nodeCache.GetNode(kind, children |> List.rev)
             |> Node
 
         children <- node :: oldChildren
@@ -60,7 +67,7 @@ type GreenNodeBuilder() =
             invalidOp "Mark has expired. Child state does not match."
 
         let node =
-            GreenNode.Create(kind, ourChildren |> List.rev)
+            nodeCache.GetNode(kind, ourChildren |> List.rev)
             |> Node
 
         children <- node :: bufferedChildren
@@ -68,7 +75,7 @@ type GreenNodeBuilder() =
     /// Buffer a token into the current node.
     member _.Token(kind: SyntaxKind, text: string) =
         children <-
-            (GreenToken.Create(kind, text) |> Token)
+            (nodeCache.GetToken(kind, text) |> Token)
             :: children
 
     /// Build a root node of the given `kind` with the current child
@@ -83,4 +90,4 @@ type GreenNodeBuilder() =
             sprintf "Expected empty stack. Found %A" nodes
             |> invalidOp
 
-        GreenNode.Create(kind, children |> List.rev)
+        nodeCache.GetNode(kind, children |> List.rev)
