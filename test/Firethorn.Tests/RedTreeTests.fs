@@ -57,3 +57,33 @@ let ``Walk red tree`` () =
     let events = Walk.walk root
 
     Assert.Equal(7, events |> Seq.length)
+
+[<Fact>]
+let ``Red tree equality of children`` () =
+
+    // Create a simple tree with shared nodes
+    let sharedNode =
+        GreenNode.Create(SyntaxKind 102, [ GreenToken.Create(SyntaxKind 3, "1") |> Token ])
+    let green =
+        GreenNode.Create(
+            SyntaxKind 101,
+            [ Token(GreenToken.Create(SyntaxKind 1, "("))
+              Node(sharedNode)
+              Node(sharedNode)
+              Token(GreenToken.Create(SyntaxKind 2, ")"))]
+        )
+    let root = SyntaxNode.CreateRoot(green)
+
+    // Check repeated enumerations are equal
+    root.ChildrenWithTokens()
+    |> Seq.zip (root.ChildrenWithTokens())
+    |> Seq.iter (Assert.Equal)
+
+    let numbers =
+        root.Children()
+        |> Seq.filter (fun c -> c.Kind = SyntaxKind 102)
+        |> List.ofSeq
+
+    Assert.Equal(2, numbers.Length)
+    Assert.Equal(numbers.[0].Green, numbers.[1].Green)
+    Assert.NotEqual(numbers.[0], numbers.[1])

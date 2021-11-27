@@ -1,5 +1,8 @@
 namespace Firethorn.Red
 
+open System
+open System.Runtime.CompilerServices
+
 open Firethorn
 open Firethorn.Green
 
@@ -11,6 +14,7 @@ open Firethorn.Green
 /// `SyntaxNode` represents a specific piece of syntax within the
 /// tree. Two `SyntaxNodes` are equal iff they represent the same
 /// element in the source text.
+[<NoComparison; CustomEquality>]
 type SyntaxNode =
     { Parent: SyntaxNode option
       Offset: TextLength
@@ -58,10 +62,25 @@ type SyntaxNode =
         self.ChildrenWithTokens()
         |> Seq.choose (NodeOrToken.asNode)
 
+    /// Custom equality. Red nodes are considered equal if they wrap the exact
+    /// same green node and have the same parent. There's no need to recursively
+    /// check the green node for equality here.
+    override self.Equals(other: obj) =
+        match other with
+        | :? SyntaxNode as other ->
+            self.Parent = other.Parent
+            && self.Offset = other.Offset
+            && obj.ReferenceEquals(self.Green, other.Green)
+        | _ -> false
+
+    /// Custom hash code to mimic the equality behavior.
+    override self.GetHashCode() =
+        HashCode.Combine(self.Parent, RuntimeHelpers.GetHashCode(self.Green))
+
 /// A token within the syntax tree. This is a wrapper around an
 /// underlying `GreenToken` in the same way that `SyntaxNode` wraps
 /// `GreenNode`.
-and SyntaxToken =
+and [<NoComparison; CustomEquality>] SyntaxToken =
     { Parent: SyntaxNode option
       Offset: TextLength
       Green: GreenToken }
@@ -73,6 +92,22 @@ and SyntaxToken =
     member self.Range =
         { Start = self.Offset
           End = self.Offset + self.Green.TextLength }
+
+    /// Custom equality. Red tokens are considered equal if they wrap the exact
+    /// same green token, and have the same parent. There's no need to 
+    /// recursively check the green node for equality here.
+    override self.Equals(other: obj) =
+        match other with
+        | :? SyntaxToken as other ->
+            self.Parent = other.Parent
+            && self.Offset = other.Offset
+            && obj.ReferenceEquals(self.Green, other.Green)
+        | _ -> false
+
+    /// Custom hash code to mimic the equality behavior.
+    override self.GetHashCode() =
+        HashCode.Combine(self.Parent, RuntimeHelpers.GetHashCode(self.Green))
+
 
 /// An element in the 'red' or syntax tree.
 and SyntaxElement = NodeOrToken<SyntaxNode, SyntaxToken>
