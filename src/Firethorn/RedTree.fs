@@ -94,7 +94,7 @@ and [<NoComparison; CustomEquality>] SyntaxToken =
           End = self.Offset + self.Green.TextLength }
 
     /// Custom equality. Red tokens are considered equal if they wrap the exact
-    /// same green token, and have the same parent. There's no need to 
+    /// same green token, and have the same parent. There's no need to
     /// recursively check the green node for equality here.
     override self.Equals(other: obj) =
         match other with

@@ -211,10 +211,9 @@ module Ast =
 
         static member Cast(node: SyntaxNode) =
             (UseSyntax.Cast node |> Option.map (Use))
-            |> Option.orElseWith
-                (fun () ->
-                    AbstractionSyntax.Cast node
-                    |> Option.map Abstraction)
+            |> Option.orElseWith (fun () ->
+                AbstractionSyntax.Cast node
+                |> Option.map Abstraction)
 
     type ProgramSyntax(syntax: SyntaxNode) =
 
@@ -241,8 +240,7 @@ let prettyPrint tree =
 
     tree
     |> Walk.walk
-    |> Seq.iter
-        (function
+    |> Seq.iter (function
         | EnterNode n ->
             printIndent ()
             indent <- indent + 1
@@ -258,8 +256,7 @@ let prettyPrint tree =
 
     tree
     |> Walk.walk
-    |> Seq.iter
-        (function
+    |> Seq.iter (function
         | EnterNode _ -> ()
         | LeaveNode _ -> ()
         | OnToken t -> bprintf builder "%s" t.Green.Text)

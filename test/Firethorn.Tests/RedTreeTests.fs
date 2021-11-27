@@ -64,14 +64,16 @@ let ``Red tree equality of children`` () =
     // Create a simple tree with shared nodes
     let sharedNode =
         GreenNode.Create(SyntaxKind 102, [ GreenToken.Create(SyntaxKind 3, "1") |> Token ])
+
     let green =
         GreenNode.Create(
             SyntaxKind 101,
             [ Token(GreenToken.Create(SyntaxKind 1, "("))
               Node(sharedNode)
               Node(sharedNode)
-              Token(GreenToken.Create(SyntaxKind 2, ")"))]
+              Token(GreenToken.Create(SyntaxKind 2, ")")) ]
         )
+
     let root = SyntaxNode.CreateRoot(green)
 
     // Check repeated enumerations are equal

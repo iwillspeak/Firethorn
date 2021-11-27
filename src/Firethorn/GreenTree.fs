@@ -20,11 +20,10 @@ type GreenNode =
 
         { Kind = kind
           Width =
-              children
-              |> List.sumBy
-                  (function
-                  | Node n -> n.TextLength
-                  | Token t -> t.TextLength)
+            children
+            |> List.sumBy (function
+                | Node n -> n.TextLength
+                | Token t -> t.TextLength)
           Children = children }
 
     /// Get the width of the single token.

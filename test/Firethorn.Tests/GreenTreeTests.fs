@@ -169,11 +169,13 @@ let ``Finish of unstarted node throws exception`` () =
 
     let exn =
         Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
+
     Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
 
     builder.StartNode(SyntaxKind 1)
     builder.FinishNode()
+
     let exn =
         Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
-    Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
 
+    Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)

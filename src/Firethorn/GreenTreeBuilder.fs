@@ -21,8 +21,7 @@ type GreenNodeBuilder(cache: GreenCache) =
     let nodeCache = cache
 
     /// Create a `GreenNodeBuilder` with a new node cache.
-    new () =
-        GreenNodeBuilder(GreenCache())
+    new() = GreenNodeBuilder(GreenCache(3))
 
     /// Start building a new node at the current position of the given
     /// kind.
