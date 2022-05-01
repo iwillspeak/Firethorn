@@ -19,8 +19,7 @@ let ``Green cache returns cached tokens`` () =
 
 [<Fact>]
 let ``Green cache returns cached nodes`` () =
-    let helloToken =
-        GreenToken.Create(SyntaxKind 101, "hello")
+    let helloToken = GreenToken.Create(SyntaxKind 101, "hello")
 
     let emptyNode = GreenNode.Create(SyntaxKind 102, [])
     let cache = GreenCache(3)

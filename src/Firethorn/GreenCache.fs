@@ -11,12 +11,10 @@ type GreenCache(maxCachedNodeSize: int) =
     let size = maxCachedNodeSize
 
     /// Cache of nodes
-    let nodes =
-        ConcurrentDictionary<SyntaxKind * GreenElement list, GreenNode>()
+    let nodes = ConcurrentDictionary<SyntaxKind * GreenElement list, GreenNode>()
 
     /// Cache of tokens
-    let tokens =
-        ConcurrentDictionary<SyntaxKind * string, GreenToken>()
+    let tokens = ConcurrentDictionary<SyntaxKind * string, GreenToken>()
 
     /// Get a token for the given `kind` and `value`, returning a cahced one if
     /// available.
