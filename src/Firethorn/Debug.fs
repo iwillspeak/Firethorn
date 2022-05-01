@@ -16,7 +16,7 @@ module Debug =
     /// Function to generate a kind formatter that maps kinds using a `mapper`
     /// function ready for printing.
     let public mappedFormatter mapper =
-        fun writer kind -> Printf.fprintfn writer "%A" (kind |> mapper)
+        fun writer kind -> Printf.fprintf writer "%A" (kind |> mapper)
 
     /// Debug Dump to a Given Text Writer
     ///

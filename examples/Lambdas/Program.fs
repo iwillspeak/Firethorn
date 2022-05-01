@@ -227,8 +227,6 @@ module Ast =
             syntax.Children()
             |> Seq.choose (ExpressionSyntax.Cast)
 
-let kindToName = Parse.astFromGreen >> sprintf "%A"
-
 let prettyPrint tree =
 
     let mutable indent = 0
@@ -239,16 +237,7 @@ let prettyPrint tree =
     printfn "Red tree structure:"
 
     tree
-    |> Walk.walk
-    |> Seq.iter (function
-        | EnterNode n ->
-            printIndent ()
-            indent <- indent + 1
-            printfn "%s@%O" (n.Kind |> kindToName) n.Range
-        | LeaveNode n -> indent <- indent - 1
-        | OnToken t ->
-            printIndent ()
-            printfn "%s@%O '%s'" (t.Kind |> kindToName) t.Range t.Green.Text)
+    |> Debug.debugDump (Debug.mappedFormatter Parse.astFromGreen)
 
     /// Re-construct the origional text by walking the tree and concatenating
     /// the tokens' text.
