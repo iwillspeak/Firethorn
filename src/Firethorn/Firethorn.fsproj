@@ -11,5 +11,6 @@
     <Compile Include="GreenTreeBuilder.fs" />
     <Compile Include="RedTree.fs" />
     <Compile Include="Walk.fs" />
+    <Compile Include="Debug.fs" />
   </ItemGroup>
 </Project>

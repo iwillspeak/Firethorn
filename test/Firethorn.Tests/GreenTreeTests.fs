@@ -12,8 +12,7 @@ let ``Create token has expected widths`` () =
     let plus = GreenToken.Create(SyntaxKind 1, "+")
     Assert.Equal(1, plus.TextLength)
 
-    let quote =
-        GreenToken.Create(SyntaxKind 10, "quote")
+    let quote = GreenToken.Create(SyntaxKind 10, "quote")
 
     Assert.Equal(5, quote.TextLength)
 
@@ -23,8 +22,7 @@ let ``Create token exposes kind`` () =
     let mul = GreenToken.Create(SyntaxKind 0, "*")
     Assert.Equal(SyntaxKind 0, mul.Kind)
 
-    let unquote =
-        GreenToken.Create(SyntaxKind 23, "unquote")
+    let unquote = GreenToken.Create(SyntaxKind 23, "unquote")
 
     Assert.Equal(SyntaxKind 23, unquote.Kind)
 
@@ -47,14 +45,11 @@ let ``Green node has correct length`` () =
 
 [<Fact>]
 let ``Green trees can share nodes`` () =
-    let openBrace =
-        GreenToken.Create(SyntaxKind 2, "(") |> Token
+    let openBrace = GreenToken.Create(SyntaxKind 2, "(") |> Token
 
-    let closeBrace =
-        GreenToken.Create(SyntaxKind 5, ")") |> Token
+    let closeBrace = GreenToken.Create(SyntaxKind 5, ")") |> Token
 
-    let two =
-        GreenToken.Create(SyntaxKind 4, "2") |> Token
+    let two = GreenToken.Create(SyntaxKind 4, "2") |> Token
 
     let mulForm =
         GreenNode.Create(
@@ -111,8 +106,7 @@ let ``Green nodes are structurally equal`` () =
     let emptyNode = GreenNode.Create(SyntaxKind 1, [])
     let testToken = GreenToken.Create(SyntaxKind 3, "test")
 
-    let identNode =
-        GreenNode.Create(SyntaxKind 2, [ testToken |> Token ])
+    let identNode = GreenNode.Create(SyntaxKind 2, [ testToken |> Token ])
 
     Assert.Equal(GreenNode.Create(SyntaxKind 1, []), emptyNode)
     Assert.NotEqual(identNode, emptyNode)
@@ -167,15 +161,13 @@ let ``Complete builder with unbalanced node throws exception`` () =
 let ``Finish of unstarted node throws exception`` () =
     let builder = GreenNodeBuilder()
 
-    let exn =
-        Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
+    let exn = Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
 
     Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
 
     builder.StartNode(SyntaxKind 1)
     builder.FinishNode()
 
-    let exn =
-        Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
+    let exn = Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
 
     Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
