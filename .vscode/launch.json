@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/examples/Lambdas/bin/Debug/net5.0/Lambdas.dll",
+            "program": "${workspaceFolder}/examples/Lambdas/bin/Debug/net7.0/Lambdas.dll",
             "args": ["x"],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
