@@ -1,0 +1,7 @@
+<Project>
+    <Import Project="../Directory.Build.props" />
+    <ItemGroup>
+        <!-- Pin F#.Core. This is recommended for libraries -->
+        <PackageReference Update="FSharp.Core" Version="7.0.0" />
+    </ItemGroup>
+</Project>
