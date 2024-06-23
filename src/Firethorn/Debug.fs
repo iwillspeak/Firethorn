@@ -13,6 +13,21 @@ module Debug =
 
     let rawFormatter writer kind = Printf.fprintf writer "%A" kind
 
+    let escapeStr (unescaped: string) : string =
+        let sb = new StringBuilder(unescaped.Length + 2)
+
+        unescaped
+        |> Seq.fold
+            (fun (sb: StringBuilder) char ->
+                match char with
+                | '\\' -> sb.Append("\\\\")
+                | '\n' -> sb.Append("\\n")
+                | '\t' -> sb.Append("\\t")
+                | '"' -> sb.Append("\\\"")
+                | _ -> sb.Append(char))
+            (sb.Append('"'))
+        |> _.Append('"').ToString()
+
     /// Function to generate a kind formatter that maps kinds using a `mapper`
     /// function ready for printing.
     let public mappedFormatter mapper =
@@ -41,7 +56,14 @@ module Debug =
             | WalkEvent.LeaveNode node -> nesting <- nesting - 1
             | WalkEvent.OnToken token ->
                 indent ()
-                Printf.fprintfn outputSink "%a: (%O) %A" greenToAst token.Kind token.Range token.Green.Text
+
+                Printf.fprintfn
+                    outputSink
+                    "%a: (%O) %s"
+                    greenToAst
+                    token.Kind
+                    token.Range
+                    (token.Green.Text |> escapeStr)
 
         Walk.walk >> Seq.iter onEvent
 
