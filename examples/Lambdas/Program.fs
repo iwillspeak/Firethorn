@@ -68,8 +68,7 @@ module Parse =
             kind
 
         let current () =
-            List.tryHead tokens
-            |> Option.defaultValue (TokenKind.EndOfFile, "")
+            List.tryHead tokens |> Option.defaultValue (TokenKind.EndOfFile, "")
 
         let lookingAtAny kinds =
             let currentKind = current () |> getKind
@@ -90,8 +89,7 @@ module Parse =
             tok
 
         let skipWs (builder: GreenNodeBuilder) =
-            while lookingAtAny [ TokenKind.Newline
-                                 TokenKind.Whitespace ] do
+            while lookingAtAny [ TokenKind.Newline; TokenKind.Whitespace ] do
                 builder.Token(AstKind.WHITESPACE |> astToGreen, bump () |> getText)
 
         let skipWsNoNl (builder: GreenNodeBuilder) =
@@ -136,9 +134,7 @@ module Parse =
 
             skipWsNoNl builder
 
-            if not
-               <| lookingAtAny [ TokenKind.EndOfFile
-                                 TokenKind.Newline ] then
+            if not <| lookingAtAny [ TokenKind.EndOfFile; TokenKind.Newline ] then
                 parseExpression builder
                 builder.ApplyMark(mark, AstKind.APPLICATION |> astToGreen)
 
@@ -180,10 +176,7 @@ module Ast =
 
         member _.Ident =
             syntax.ChildrenWithTokens()
-            |> Seq.tryPick (
-                NodeOrToken.asToken
-                >> (Option.bind IdentifierSyntax.Cast)
-            )
+            |> Seq.tryPick (NodeOrToken.asToken >> (Option.bind IdentifierSyntax.Cast))
 
     and AbstractionSyntax(syntax: SyntaxNode) =
 
@@ -195,15 +188,9 @@ module Ast =
 
         member _.Binding =
             syntax.ChildrenWithTokens()
-            |> Seq.tryPick (
-                NodeOrToken.asToken
-                >> (Option.bind IdentifierSyntax.Cast)
-            )
+            |> Seq.tryPick (NodeOrToken.asToken >> (Option.bind IdentifierSyntax.Cast))
 
-        member _.Body =
-            syntax.Children()
-            |> Seq.choose ExpressionSyntax.Cast
-            |> Seq.tryHead
+        member _.Body = syntax.Children() |> Seq.choose ExpressionSyntax.Cast |> Seq.tryHead
 
     and ExpressionSyntax =
         | Abstraction of AbstractionSyntax
@@ -211,9 +198,7 @@ module Ast =
 
         static member Cast(node: SyntaxNode) =
             (UseSyntax.Cast node |> Option.map (Use))
-            |> Option.orElseWith (fun () ->
-                AbstractionSyntax.Cast node
-                |> Option.map Abstraction)
+            |> Option.orElseWith (fun () -> AbstractionSyntax.Cast node |> Option.map Abstraction)
 
     type ProgramSyntax(syntax: SyntaxNode) =
 
@@ -223,9 +208,7 @@ module Ast =
             else
                 None
 
-        member _.Expressions =
-            syntax.Children()
-            |> Seq.choose (ExpressionSyntax.Cast)
+        member _.Expressions = syntax.Children() |> Seq.choose (ExpressionSyntax.Cast)
 
 let prettyPrint tree =
 
@@ -236,8 +219,7 @@ let prettyPrint tree =
 
     printfn "Red tree structure:"
 
-    tree
-    |> Debug.debugDump (Debug.mappedFormatter Parse.astFromGreen)
+    tree |> Debug.debugDump (Debug.mappedFormatter Parse.astFromGreen)
 
     /// Re-construct the origional text by walking the tree and concatenating
     /// the tokens' text.

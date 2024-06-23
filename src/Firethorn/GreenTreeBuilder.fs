@@ -38,9 +38,7 @@ type GreenNodeBuilder(cache: GreenCache) =
         let (kind, oldChildren) = nodes |> List.head
         nodes <- nodes |> List.tail
 
-        let node =
-            nodeCache.GetNode(kind, children |> List.rev)
-            |> Node
+        let node = nodeCache.GetNode(kind, children |> List.rev) |> Node
 
         children <- node :: oldChildren
 
@@ -65,17 +63,13 @@ type GreenNodeBuilder(cache: GreenCache) =
         if not (bufferedChildren = mark.Children) then
             invalidOp "Mark has expired. Child state does not match."
 
-        let node =
-            nodeCache.GetNode(kind, ourChildren |> List.rev)
-            |> Node
+        let node = nodeCache.GetNode(kind, ourChildren |> List.rev) |> Node
 
         children <- node :: bufferedChildren
 
     /// Buffer a token into the current node.
     member _.Token(kind: SyntaxKind, text: string) =
-        children <-
-            (nodeCache.GetToken(kind, text) |> Token)
-            :: children
+        children <- (nodeCache.GetToken(kind, text) |> Token) :: children
 
     /// Build a root node of the given `kind` with the current child
     /// state. When this is called the tree must be 'balanced'. That
@@ -86,7 +80,6 @@ type GreenNodeBuilder(cache: GreenCache) =
     /// converted into a red tree by calling `SyntaxNode.CreateRoot`.
     member _.BuildRoot(kind: SyntaxKind) =
         if not (List.isEmpty nodes) then
-            sprintf "Expected empty stack. Found %A" nodes
-            |> invalidOp
+            sprintf "Expected empty stack. Found %A" nodes |> invalidOp
 
         nodeCache.GetNode(kind, children |> List.rev)
