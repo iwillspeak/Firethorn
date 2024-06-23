@@ -212,11 +212,6 @@ module Ast =
 
 let prettyPrint tree =
 
-    let mutable indent = 0
-
-    let printIndent () =
-        String.init indent (fun _ -> "  ") |> printf "%s"
-
     printfn "Red tree structure:"
 
     tree |> Debug.debugDump (Debug.mappedFormatter Parse.astFromGreen)
