@@ -25,20 +25,12 @@ let ``Green cache returns cached nodes`` () =
     let cache = GreenCache(3)
 
     let first =
-        cache.GetNode(
-            SyntaxKind 101,
-            [ helloToken |> Token
-              emptyNode |> Node ]
-        )
+        cache.GetNode(SyntaxKind 101, [ helloToken |> Token; emptyNode |> Node ])
 
     let second = cache.GetNode(SyntaxKind 102, [])
 
     let third =
-        cache.GetNode(
-            SyntaxKind 101,
-            [ helloToken |> Token
-              emptyNode |> Node ]
-        )
+        cache.GetNode(SyntaxKind 101, [ helloToken |> Token; emptyNode |> Node ])
 
     Assert.NotSame(first, second)
     Assert.Same(first, third)

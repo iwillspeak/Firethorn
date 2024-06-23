@@ -21,18 +21,19 @@ jobs:
     vmImage: 'ubuntu-latest'
   steps:
   - task: UseDotNet@2
-    displayName: 'Use .NET 7.0 sdk'
+    displayName: 'Use .NET 8.0 sdk'
     inputs:
       packageType: sdk
-      version: 7.0.x
+      version: 8.0.x
   - bash: |
       set -euxo pipefail
       dotnet tool restore
       dotnet build --configuration $(configuration)
       dotnet test --no-build --configuration $(configuration) --logger 'trx' --logger 'console;verbosity=normal'
       dotnet pack --no-build --configuration $(configuration) --output=$(Build.ArtifactStagingDirectory)
-      # Check code format. Fantomas for F#
-      dotnet tool run fantomas --check --recurse .
+      # Check code format. Fantomas for F#, dotnet format for C#
+      dotnet tool run fantomas --check .
+      dotnet format --verify-no-changes
   - task: PublishTestResults@2
     condition: always()
     inputs:

@@ -59,8 +59,7 @@ type SyntaxNode =
 
     /// Enumerate the child nodes only of the current node, skipping tokens.
     member self.Children() =
-        self.ChildrenWithTokens()
-        |> Seq.choose (NodeOrToken.asNode)
+        self.ChildrenWithTokens() |> Seq.choose (NodeOrToken.asNode)
 
     /// Custom equality. Red nodes are considered equal if they wrap the exact
     /// same green node and have the same parent. There's no need to recursively

@@ -5,6 +5,7 @@ open Xunit
 open Firethorn
 open Firethorn.Green
 open Firethorn.Red
+open System
 
 [<Fact>]
 let ``Create red tree from root node`` () =
@@ -31,16 +32,15 @@ let ``Create red tree with children`` () =
     Assert.Equal(0, root.Offset)
     Assert.Equal(None, root.Parent)
 
-    let literals =
-        root.Children()
-        |> Seq.filter (fun x -> x.Kind = SyntaxKind 5)
+    let literals = root.Children() |> Seq.filter (fun x -> x.Kind = SyntaxKind 5)
 
-    Assert.Collection(literals, (fun x -> Assert.Equal(2, x.Offset)), (fun x -> Assert.Equal(3, x.Offset)))
-
-    Assert.Empty(
-        root.Children()
-        |> Seq.filter (fun x -> x.Kind = SyntaxKind 1)
+    Assert.Collection(
+        literals,
+        new Action<SyntaxNode>(fun x -> Assert.Equal(2, x.Offset)),
+        new Action<SyntaxNode>(fun x -> Assert.Equal(3, x.Offset))
     )
+
+    Assert.Empty(root.Children() |> Seq.filter (fun x -> x.Kind = SyntaxKind 1))
 
 [<Fact>]
 let ``Walk red tree`` () =
@@ -82,9 +82,7 @@ let ``Red tree equality of children`` () =
     |> Seq.iter (Assert.Equal)
 
     let numbers =
-        root.Children()
-        |> Seq.filter (fun c -> c.Kind = SyntaxKind 102)
-        |> List.ofSeq
+        root.Children() |> Seq.filter (fun c -> c.Kind = SyntaxKind 102) |> List.ofSeq
 
     Assert.Equal(2, numbers.Length)
     Assert.Equal(numbers.[0].Green, numbers.[1].Green)

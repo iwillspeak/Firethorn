@@ -133,22 +133,23 @@ let ``Green tree builder`` () =
 
     Assert.Equal((SyntaxKind 103), tree.Kind)
 
+
     Assert.Collection(
         tree.Children,
-        (fun token -> Assert.True(token |> NodeOrToken.isToken)),
-        (fun node ->
+        Action<GreenElement>(fun token -> Assert.True(token |> NodeOrToken.isToken)),
+        Action<GreenElement>(fun node ->
             Assert.True(node |> NodeOrToken.isNode)
             let node = (node |> NodeOrToken.asNode).Value
             Assert.Equal(SyntaxKind 101, node.Kind)),
-        (fun node ->
+        Action<GreenElement>(fun node ->
             Assert.True(node |> NodeOrToken.isNode)
             let node = (node |> NodeOrToken.asNode).Value
             Assert.Equal(SyntaxKind 102, node.Kind)),
-        (fun node ->
+        Action<GreenElement>(fun node ->
             Assert.True(node |> NodeOrToken.isNode)
             let node = (node |> NodeOrToken.asNode).Value
             Assert.Equal(SyntaxKind 102, node.Kind)),
-        (fun token -> Assert.True(token |> NodeOrToken.isToken))
+        Action<GreenElement>(fun token -> Assert.True(token |> NodeOrToken.isToken))
     )
 
 [<Fact>]
