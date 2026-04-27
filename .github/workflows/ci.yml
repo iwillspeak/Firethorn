@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - 'noci/**'
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Build, test and pack
+        env:
+          BUILD_SOURCEBRANCH: ${{ github.ref }}
+        run: |
+          set -euxo pipefail
+          dotnet tool restore
+          dotnet build --configuration Release
+          dotnet test --no-build --configuration Release --logger 'trx' --logger 'console;verbosity=normal'
+          dotnet pack --no-build --configuration Release --output=PublishOutput
+          # Check code format. Fantomas for F#, dotnet format for C#
+          dotnet tool run fantomas --check .
+          dotnet format --verify-no-changes
+
+      - name: Upload NuGet packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: NuGets
+          path: PublishOutput/
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: TestResults
+          path: '**/TestResults/*.trx'
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: CoverageReport
+          path: CoverageReport/
