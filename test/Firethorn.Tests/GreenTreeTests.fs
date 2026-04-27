@@ -10,11 +10,11 @@ open System
 [<Fact>]
 let ``Create token has expected widths`` () =
     let plus = GreenToken.Create(SyntaxKind 1, "+")
-    Assert.Equal(1, plus.TextLength)
+    Assert.Equal(1u, plus.TextLength)
 
     let quote = GreenToken.Create(SyntaxKind 10, "quote")
 
-    Assert.Equal(5, quote.TextLength)
+    Assert.Equal(5u, quote.TextLength)
 
 
 [<Fact>]
@@ -29,7 +29,7 @@ let ``Create token exposes kind`` () =
 [<Fact>]
 let ``Green node has correct length`` () =
     let empty = GreenNode.Create(SyntaxKind 10, [])
-    Assert.Equal(0, empty.TextLength)
+    Assert.Equal(0u, empty.TextLength)
 
     let mulForm =
         GreenNode.Create(
@@ -41,7 +41,7 @@ let ``Green node has correct length`` () =
               GreenToken.Create(SyntaxKind 5, ")") |> Token ]
         )
 
-    Assert.Equal(7, mulForm.TextLength)
+    Assert.Equal(7u, mulForm.TextLength)
 
 [<Fact>]
 let ``Green trees can share nodes`` () =
@@ -66,7 +66,7 @@ let ``Green trees can share nodes`` () =
     //      +---+-----+--+--+----+
     //      |   |      \   /     |
     //   Open  Mul      Two    Close
-    Assert.Equal(5, mulForm.TextLength)
+    Assert.Equal(5u, mulForm.TextLength)
 
     let additionForm =
         GreenNode.Create(
@@ -87,7 +87,7 @@ let ``Green trees can share nodes`` () =
     //      +---+-----+--+--+----+
     //          |      \   /
     //         Mul      Two
-    Assert.Equal(13, additionForm.TextLength)
+    Assert.Equal(13u, additionForm.TextLength)
 
 [<Fact>]
 let ``Green tokens are structurally equal`` () =

@@ -23,7 +23,7 @@ type SyntaxNode =
     /// Create a new root syntax node from an underlying green node.
     static member CreateRoot(node: GreenNode) =
         { Parent = None
-          Offset = 0
+          Offset = 0u
           Green = node }
 
     /// Get the kind of the underlying green node.
