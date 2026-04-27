@@ -1,7 +1,7 @@
 namespace Firethorn
 
 /// A position in source text.
-type TextLength = int
+type TextLength = uint32
 
 /// A range of positions in source text.
 type TextRange =

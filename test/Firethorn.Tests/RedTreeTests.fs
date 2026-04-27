@@ -12,7 +12,7 @@ let ``Create red tree from root node`` () =
     let green = GreenNode.Create(SyntaxKind 0, [])
     let syntaxRoot = SyntaxNode.CreateRoot(green)
 
-    Assert.Equal(0, syntaxRoot.Offset)
+    Assert.Equal(0u, syntaxRoot.Offset)
     Assert.Equal(None, syntaxRoot.Parent)
 
 [<Fact>]
@@ -29,15 +29,15 @@ let ``Create red tree with children`` () =
 
     let root = SyntaxNode.CreateRoot(green)
 
-    Assert.Equal(0, root.Offset)
+    Assert.Equal(0u, root.Offset)
     Assert.Equal(None, root.Parent)
 
     let literals = root.Children() |> Seq.filter (fun x -> x.Kind = SyntaxKind 5)
 
     Assert.Collection(
         literals,
-        new Action<SyntaxNode>(fun x -> Assert.Equal(2, x.Offset)),
-        new Action<SyntaxNode>(fun x -> Assert.Equal(3, x.Offset))
+        new Action<SyntaxNode>(fun x -> Assert.Equal(2u, x.Offset)),
+        new Action<SyntaxNode>(fun x -> Assert.Equal(3u, x.Offset))
     )
 
     Assert.Empty(root.Children() |> Seq.filter (fun x -> x.Kind = SyntaxKind 1))
