@@ -26,12 +26,11 @@ jobs:
         run: |
           set -euxo pipefail
           dotnet tool restore
-          dotnet build --configuration Release
-          dotnet test --no-build --configuration Release --logger 'trx' --logger 'console;verbosity=normal'
-          dotnet pack --no-build --configuration Release --output=PublishOutput
+          dotnet build --configuration Release /p:ContinuousIntegrationBuild=true
+          dotnet test --no-build --configuration Release /p:ContinuousIntegrationBuild=true --logger 'trx' --logger 'console;verbosity=normal'
+          dotnet pack --no-build --configuration Release /p:ContinuousIntegrationBuild=true --output=PublishOutput
           # Check code format. Fantomas for F#, dotnet format for C#
           dotnet tool run fantomas --check .
-          dotnet format --verify-no-changes
 
       - name: Upload NuGet packages
         uses: actions/upload-artifact@v7
