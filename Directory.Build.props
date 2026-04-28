@@ -3,7 +3,12 @@
     <UpdateVersionProperties>true</UpdateVersionProperties>
     <UpdateAssemblyInfo>false</UpdateAssemblyInfo>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <PropertyGroup>
     <!-- Replaces next-version: 0.1.0 from GitVersion.yml -->
