@@ -41,7 +41,7 @@ and GreenToken =
     static member Create(kind: SyntaxKind, text: string) = { Kind = kind; Text = text }
 
     /// Get the width of the single token.
-    member self.TextLength =  uint32 self.Text.Length
+    member self.TextLength = uint32 self.Text.Length
 
     /// Custom string representation for tokens.
     override self.ToString() =

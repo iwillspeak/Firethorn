@@ -4,6 +4,7 @@ namespace Firethorn
 type TextLength = uint32
 
 /// A range of positions in source text.
+[<Struct>]
 type TextRange =
     { Start: TextLength
       End: TextLength }
