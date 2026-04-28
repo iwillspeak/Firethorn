@@ -1,5 +1,8 @@
 # Firethorn
 
+[![CI](https://github.com/iwillspeak/Firethorn/actions/workflows/ci.yml/badge.svg)](https://github.com/iwillspeak/Firethorn/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/Firethorn.svg)](https://www.nuget.org/packages/Firethorn/)
+
 Red-Green syntax trees for F#. Inspired by Rowan.
 
 ## Design Goals
