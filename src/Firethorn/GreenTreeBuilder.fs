@@ -38,7 +38,7 @@ type GreenNodeBuilder(cache: GreenCache) =
         let (kind, oldChildren) = nodes |> List.head
         nodes <- nodes |> List.tail
 
-        let node = nodeCache.GetNode(kind, children |> List.rev) |> Node
+        let node = nodeCache.GetNode(kind, children |> List.rev |> Array.ofList) |> Node
 
         children <- node :: oldChildren
 
@@ -63,7 +63,7 @@ type GreenNodeBuilder(cache: GreenCache) =
         if not (bufferedChildren = mark.Children) then
             invalidOp "Mark has expired. Child state does not match."
 
-        let node = nodeCache.GetNode(kind, ourChildren |> List.rev) |> Node
+        let node = nodeCache.GetNode(kind, ourChildren |> List.rev |> Array.ofList) |> Node
 
         children <- node :: bufferedChildren
 
@@ -82,4 +82,4 @@ type GreenNodeBuilder(cache: GreenCache) =
         if not (List.isEmpty nodes) then
             sprintf "Expected empty stack. Found %A" nodes |> invalidOp
 
-        nodeCache.GetNode(kind, children |> List.rev)
+        nodeCache.GetNode(kind, children |> List.rev |> Array.ofList)
