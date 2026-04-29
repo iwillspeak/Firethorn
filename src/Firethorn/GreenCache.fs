@@ -1,21 +1,7 @@
 namespace Firethorn.Green
 
-open System
 open System.Collections.Concurrent
-open System.Collections.Generic
 open Firethorn
-
-/// Structural equality comparer for `(SyntaxKind * GreenElement[])` cache keys.
-/// Arrays do not have structural equality by default, so this comparer provides
-/// element-wise comparison using the structural equality of `GreenElement`.
-type private GreenNodeKeyComparer() =
-    interface IEqualityComparer<SyntaxKind * GreenElement[]> with
-        member _.Equals((k1, c1), (k2, c2)) =
-            k1 = k2 && c1.Length = c2.Length && Array.forall2 (=) c1 c2
-
-        member _.GetHashCode((k, c)) =
-            c
-            |> Array.fold (fun acc el -> HashCode.Combine(acc, el.GetHashCode())) (k.GetHashCode())
 
 /// Cache of green elements. This is used when building trees to share structural sub-trees amongst new nodes.
 [<Sealed>]
@@ -25,8 +11,7 @@ type GreenCache(maxCachedNodeSize: int) =
     let size = maxCachedNodeSize
 
     /// Cache of nodes
-    let nodes =
-        ConcurrentDictionary<SyntaxKind * GreenElement[], GreenNode>(GreenNodeKeyComparer())
+    let nodes = ConcurrentDictionary<SyntaxKind * GreenElement list, GreenNode>()
 
     /// Cache of tokens
     let tokens = ConcurrentDictionary<SyntaxKind * string, GreenToken>()
@@ -38,7 +23,7 @@ type GreenCache(maxCachedNodeSize: int) =
 
     /// Get a node for the given `kind` and `children`, returning a cached one
     /// if available.
-    member _.GetNode(kind: SyntaxKind, children: GreenElement[]) =
+    member _.GetNode(kind: SyntaxKind, children: GreenElement list) =
         if children.Length <= size then
             nodes.GetOrAdd((kind, children), fun (k, cs) -> GreenNode.Create(k, cs))
         else
