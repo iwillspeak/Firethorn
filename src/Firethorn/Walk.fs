@@ -3,13 +3,14 @@ namespace Firethorn.Red
 open Firethorn
 
 /// Events emitted by the walk
+[<Struct>]
 type WalkEvent =
     /// A new syntax node is entered.
-    | EnterNode of SyntaxNode
+    | EnterNode of node: SyntaxNode
     /// A syntax node is left
-    | LeaveNode of SyntaxNode
+    | LeaveNode of node: SyntaxNode
     /// A syntax token is encountered.
-    | OnToken of SyntaxToken
+    | OnToken of token: SyntaxToken
 
 module Walk =
 
