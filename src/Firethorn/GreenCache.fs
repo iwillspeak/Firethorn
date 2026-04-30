@@ -1,45 +1,52 @@
 namespace Firethorn.Green
 
 open System
-open System.Collections.Concurrent
-open System.Collections.Generic
 open Firethorn
 
-/// Structural equality comparer for `(SyntaxKind * GreenElement[])` cache keys.
-/// Arrays do not have structural equality by default, so this comparer provides
-/// element-wise comparison using the structural equality of `GreenElement`.
-type private GreenNodeKeyComparer() =
-    interface IEqualityComparer<SyntaxKind * GreenElement[]> with
-        member _.Equals((k1, c1), (k2, c2)) =
-            k1 = k2 && c1.Length = c2.Length && Array.forall2 (=) c1 c2
-
-        member _.GetHashCode((k, c)) =
-            c
-            |> Array.fold (fun acc el -> HashCode.Combine(acc, el.GetHashCode())) (k.GetHashCode())
-
 /// Cache of green elements. This is used when building trees to share structural sub-trees amongst new nodes.
+/// Implemented as a pair of direct-mapped arrays (one for keys, one for values) with 4096 slots each.
+/// On collision the existing entry is evicted and replaced.
 [<Sealed>]
 type GreenCache(maxCachedNodeSize: int) =
 
-    // Maximum number of children that a given node is allowed.
     let size = maxCachedNodeSize
 
-    /// Cache of nodes
-    let nodes =
-        ConcurrentDictionary<SyntaxKind * GreenElement[], GreenNode>(GreenNodeKeyComparer())
+    let nodeKeys = Array.zeroCreate<struct(SyntaxKind * GreenElement[]) voption> 4096
+    let nodeValues = Array.zeroCreate<GreenNode> 4096
 
-    /// Cache of tokens
-    let tokens = ConcurrentDictionary<SyntaxKind * string, GreenToken>()
+    let tokenKeys = Array.zeroCreate<struct(SyntaxKind * string) voption> 4096
+    let tokenValues = Array.zeroCreate<GreenToken> 4096
 
-    /// Get a token for the given `kind` and `value`, returning a cahced one if
-    /// available.
+    static let nodeHash (kind: SyntaxKind) (children: GreenElement[]) =
+        children
+        |> Array.fold (fun acc el -> HashCode.Combine(acc, el.GetHashCode())) (kind.GetHashCode())
+
     member _.GetToken(kind: SyntaxKind, value: string) =
-        tokens.GetOrAdd((kind, value), (GreenToken.Create))
+        let hash = HashCode.Combine(kind.GetHashCode(), value.GetHashCode())
+        let idx = hash &&& 0xFFF
+        match tokenKeys.[idx] with
+        | ValueSome(struct(k, v)) when k = kind && v = value ->
+            tokenValues.[idx]
+        | _ ->
+            let token = GreenToken.Create(kind, value)
+            tokenKeys.[idx] <- ValueSome(struct(kind, value))
+            tokenValues.[idx] <- token
+            token
 
-    /// Get a node for the given `kind` and `children`, returning a cached one
-    /// if available.
     member _.GetNode(kind: SyntaxKind, children: GreenElement[]) =
-        if children.Length <= size then
-            nodes.GetOrAdd((kind, children), fun (k, cs) -> GreenNode.Create(k, cs))
-        else
+        if children.Length > size then
             GreenNode.Create(kind, children)
+        else
+            let hash = nodeHash kind children
+            let idx = hash &&& 0xFFF
+            match nodeKeys.[idx] with
+            | ValueSome(struct(k, cs)) when
+                k = kind
+                && cs.Length = children.Length
+                && Array.forall2 (=) cs children ->
+                nodeValues.[idx]
+            | _ ->
+                let node = GreenNode.Create(kind, children)
+                nodeKeys.[idx] <- ValueSome(struct(kind, children))
+                nodeValues.[idx] <- node
+                node
