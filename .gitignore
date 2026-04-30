@@ -21,3 +21,5 @@ bin/
 
 # Any CIL files
 *.il
+
+*.local.json
