@@ -3,7 +3,10 @@ namespace Firethorn.Green
 open Firethorn
 
 [<Struct>]
-type Mark = private { Ref: ResizeArray<GreenElement>; Count: int }
+type Mark =
+    private
+        { Ref: ResizeArray<GreenElement>
+          Count: int }
 
 /// Builder type for green nodes. This is intended to be used by a
 /// parser to build up a tree partwise.
@@ -42,7 +45,9 @@ type GreenNodeBuilder(cache: GreenCache) =
     /// Store a mark to the current state. This can optionally be used later
     /// to convert the buffered state into a node as if `StartNode` was called
     /// at this point.
-    member _.Mark() = { Ref = children; Count = children.Count }
+    member _.Mark() =
+        { Ref = children
+          Count = children.Count }
 
     /// Convert a stored mark into a node. This takes all state buffered since
     /// the mark and uses it as the child state of the new node. The final state

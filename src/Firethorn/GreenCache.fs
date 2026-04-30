@@ -5,12 +5,12 @@ open Firethorn
 
 [<Struct>]
 type private NodeSlot =
-    { mutable Key: struct(SyntaxKind * GreenElement[]) voption
+    { mutable Key: struct (SyntaxKind * GreenElement[]) voption
       mutable Value: GreenNode }
 
 [<Struct>]
 type private TokenSlot =
-    { mutable Key: struct(SyntaxKind * string) voption
+    { mutable Key: struct (SyntaxKind * string) voption
       mutable Value: GreenToken }
 
 /// Cache of green elements. This is used when building trees to share structural sub-trees amongst new nodes.
@@ -31,12 +31,16 @@ type GreenCache(maxCachedNodeSize: int) =
         let hash = HashCode.Combine(kind.GetHashCode(), value.GetHashCode())
         let idx = hash &&& 0x1FF
         let slot = tokens.[idx]
+
         match slot.Key with
-        | ValueSome(struct(k, v)) when k = kind && v = value ->
-            slot.Value
+        | ValueSome(struct (k, v)) when k = kind && v = value -> slot.Value
         | _ ->
             let token = GreenToken.Create(kind, value)
-            tokens.[idx] <- { Key = ValueSome(struct(kind, value)); Value = token }
+
+            tokens.[idx] <-
+                { Key = ValueSome(struct (kind, value))
+                  Value = token }
+
             token
 
     member _.GetNode(kind: SyntaxKind, children: GreenElement[]) =
@@ -46,13 +50,15 @@ type GreenCache(maxCachedNodeSize: int) =
             let hash = nodeHash kind children
             let idx = hash &&& 0x1FF
             let slot = nodes.[idx]
+
             match slot.Key with
-            | ValueSome(struct(k, cs)) when
-                k = kind
-                && cs.Length = children.Length
-                && Array.forall2 (=) cs children ->
+            | ValueSome(struct (k, cs)) when k = kind && cs.Length = children.Length && Array.forall2 (=) cs children ->
                 slot.Value
             | _ ->
                 let node = GreenNode.Create(kind, children)
-                nodes.[idx] <- { Key = ValueSome(struct(kind, children)); Value = node }
+
+                nodes.[idx] <-
+                    { Key = ValueSome(struct (kind, children))
+                      Value = node }
+
                 node
