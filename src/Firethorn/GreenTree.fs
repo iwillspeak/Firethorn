@@ -16,11 +16,9 @@ type GreenNode =
       Children: GreenElement[]
       Hash: int }
 
-    /// Create a new green node from raw parts. The width of the node is
-    /// inferred from the width of the `children`.
-    static member Create(kind: SyntaxKind, children: seq<GreenElement>) =
-        let children = Array.ofSeq children
-
+    /// Create a new green node from a pre-allocated children array. The array
+    /// is stored directly without copying.
+    static member Create(kind: SyntaxKind, children: GreenElement[]) =
         let hash =
             children
             |> Array.fold (fun acc el -> HashCode.Combine(acc, el.GetHashCode())) (kind.GetHashCode())
@@ -33,6 +31,11 @@ type GreenNode =
                 | Token t -> t.TextLength)
           Children = children
           Hash = hash }
+
+    /// Create a new green node from a sequence of children. Converts to an
+    /// array; prefer the `GreenElement[]` overload when the array is already available.
+    static member Create(kind: SyntaxKind, children: seq<GreenElement>) =
+        GreenNode.Create(kind, Array.ofSeq children)
 
     /// Get the width of the single token.
     member self.TextLength = self.Width
