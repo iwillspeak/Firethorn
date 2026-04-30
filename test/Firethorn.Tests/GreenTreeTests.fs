@@ -187,16 +187,19 @@ let ``Mark and ApplyMark wraps tokens added since mark`` () =
     let tree = builder.BuildRoot(SyntaxKind 200)
 
     Assert.Equal(SyntaxKind 200, tree.Kind)
+
     Assert.Collection(
         tree.Children,
         Action<GreenElement>(fun e -> Assert.True(e |> NodeOrToken.isToken)),
         Action<GreenElement>(fun e ->
             let n = (e |> NodeOrToken.asNode).Value
             Assert.Equal(SyntaxKind 100, n.Kind)
+
             Assert.Collection(
                 n.Children,
                 Action<GreenElement>(fun t -> Assert.True(t |> NodeOrToken.isToken)),
-                Action<GreenElement>(fun t -> Assert.True(t |> NodeOrToken.isToken)))),
+                Action<GreenElement>(fun t -> Assert.True(t |> NodeOrToken.isToken))
+            )),
         Action<GreenElement>(fun e -> Assert.True(e |> NodeOrToken.isToken))
     )
 
@@ -239,7 +242,6 @@ let ``ApplyMark with expired mark throws`` () =
     builder.Token(SyntaxKind 3, "c")
 
     let exn =
-        Assert.Throws<InvalidOperationException>(fun () ->
-            builder.ApplyMark(mark, SyntaxKind 100) |> ignore)
+        Assert.Throws<InvalidOperationException>(fun () -> builder.ApplyMark(mark, SyntaxKind 100) |> ignore)
 
     Assert.Contains("Mark has expired", exn.Message)

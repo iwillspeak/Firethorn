@@ -23,3 +23,4 @@ bin/
 *.il
 
 *.local.json
+BenchmarkDotNet.Artifacts
