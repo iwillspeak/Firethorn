@@ -164,11 +164,82 @@ let ``Finish of unstarted node throws exception`` () =
 
     let exn = Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
 
-    Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
+    Assert.Contains("Unbalanced call to `FinishNode`.", exn.Message)
 
     builder.StartNode(SyntaxKind 1)
     builder.FinishNode()
 
     let exn = Assert.Throws<InvalidOperationException>(fun () -> builder.FinishNode())
 
-    Assert.Contains("Unbalanced call to `FinishNod`.", exn.Message)
+    Assert.Contains("Unbalanced call to `FinishNode`.", exn.Message)
+
+[<Fact>]
+let ``Mark and ApplyMark wraps tokens added since mark`` () =
+    let builder = GreenNodeBuilder()
+
+    builder.Token(SyntaxKind 1, "(")
+    let mark = builder.Mark()
+    builder.Token(SyntaxKind 2, "x")
+    builder.Token(SyntaxKind 2, "y")
+    builder.ApplyMark(mark, SyntaxKind 100)
+    builder.Token(SyntaxKind 1, ")")
+
+    let tree = builder.BuildRoot(SyntaxKind 200)
+
+    Assert.Equal(SyntaxKind 200, tree.Kind)
+    Assert.Collection(
+        tree.Children,
+        Action<GreenElement>(fun e -> Assert.True(e |> NodeOrToken.isToken)),
+        Action<GreenElement>(fun e ->
+            let n = (e |> NodeOrToken.asNode).Value
+            Assert.Equal(SyntaxKind 100, n.Kind)
+            Assert.Collection(
+                n.Children,
+                Action<GreenElement>(fun t -> Assert.True(t |> NodeOrToken.isToken)),
+                Action<GreenElement>(fun t -> Assert.True(t |> NodeOrToken.isToken)))),
+        Action<GreenElement>(fun e -> Assert.True(e |> NodeOrToken.isToken))
+    )
+
+[<Fact>]
+let ``Mark and ApplyMark wraps sub-nodes built since mark`` () =
+    let builder = GreenNodeBuilder()
+
+    let mark = builder.Mark()
+    builder.StartNode(SyntaxKind 10)
+    builder.Token(SyntaxKind 1, "a")
+    builder.FinishNode()
+    builder.StartNode(SyntaxKind 11)
+    builder.Token(SyntaxKind 2, "b")
+    builder.FinishNode()
+    builder.ApplyMark(mark, SyntaxKind 100)
+
+    let tree = builder.BuildRoot(SyntaxKind 200)
+
+    Assert.Collection(
+        tree.Children,
+        Action<GreenElement>(fun e ->
+            let n = (e |> NodeOrToken.asNode).Value
+            Assert.Equal(SyntaxKind 100, n.Kind)
+            Assert.Equal(2, n.Children.Length))
+    )
+
+[<Fact>]
+let ``ApplyMark with expired mark throws`` () =
+    // Take a mark inside a node, then finish that node — the stack has
+    // unwound past the mark's level. Even if new tokens are added until
+    // the child count matches, the mark must be rejected.
+    let builder = GreenNodeBuilder()
+
+    builder.StartNode(SyntaxKind 10)
+    builder.Token(SyntaxKind 1, "a")
+    let mark = builder.Mark()
+    builder.Token(SyntaxKind 2, "b")
+    builder.FinishNode()
+    // One token at the outer level to restore the same child count as at mark time
+    builder.Token(SyntaxKind 3, "c")
+
+    let exn =
+        Assert.Throws<InvalidOperationException>(fun () ->
+            builder.ApplyMark(mark, SyntaxKind 100) |> ignore)
+
+    Assert.Contains("Mark has expired", exn.Message)
